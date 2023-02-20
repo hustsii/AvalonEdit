@@ -228,8 +228,8 @@ namespace ICSharpCode.AvalonEdit.Rendering
 				} else {
 					if (segmentStartVCInLine <= visualEndCol) {
 						foreach (TextBounds b in line.GetTextBounds(segmentStartVCInLine, segmentEndVCInLine - segmentStartVCInLine)) {
-							double left = b.Rectangle.Left - scrollOffset.X;
-							double right = b.Rectangle.Right - scrollOffset.X;
+							double left = b.Rectangle.Left - scrollOffset.X + textView.LeftBlankWidth;   // shiwei
+							double right = b.Rectangle.Right - scrollOffset.X + textView.LeftBlankWidth; // shiwei
 							if (!lastRect.IsEmpty)
 								yield return lastRect;
 							// left>right is possible in RTL languages

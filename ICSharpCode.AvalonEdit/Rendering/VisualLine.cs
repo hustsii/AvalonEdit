@@ -445,7 +445,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 			if (visualColumn > VisualLengthWithEndOfLineMarker) {
 				xPos += (visualColumn - VisualLengthWithEndOfLineMarker) * textView.WideSpaceWidth;
 			}
-			return xPos;
+			return xPos + textView.LeftBlankWidth; //shiwei
 		}
 
 		/// <summary>
@@ -480,6 +480,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		/// </summary>
 		public int GetVisualColumn(TextLine textLine, double xPos, bool allowVirtualSpace)
 		{
+			xPos = xPos - textView.LeftBlankWidth; //shiwei
 			if (xPos > textLine.WidthIncludingTrailingWhitespace) {
 				if (allowVirtualSpace && textLine == TextLines[TextLines.Count - 1]) {
 					int virtualX = (int)Math.Round((xPos - textLine.WidthIncludingTrailingWhitespace) / textView.WideSpaceWidth, MidpointRounding.AwayFromZero);
@@ -733,7 +734,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		{
 			Debug.Assert(phase == LifetimePhase.Live);
 			if (visual == null)
-				visual = new VisualLineDrawingVisual(this, textView.FlowDirection);
+				visual = new VisualLineDrawingVisual(this, textView.FlowDirection,textView);
 			return visual;
 		}
 	}
@@ -743,18 +744,21 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		public readonly VisualLine VisualLine;
 		public readonly double Height;
 		internal bool IsAdded;
+		private TextView textView;
 
-		public VisualLineDrawingVisual(VisualLine visualLine, FlowDirection flow)
+		public VisualLineDrawingVisual(VisualLine visualLine, FlowDirection flow, TextView textView)
 		{
+			this.textView = textView;
 			this.VisualLine = visualLine;
 			var drawingContext = RenderOpen();
 			double pos = 0;
+			
 			foreach (TextLine textLine in visualLine.TextLines) {
 				if (flow == FlowDirection.LeftToRight) {
-				textLine.Draw(drawingContext, new Point(0, pos), InvertAxes.None);
-				} else  {
+					textLine.Draw(drawingContext, new Point(textView.LeftBlankWidth, pos), InvertAxes.None); //shiwei
+				} else {
 					// Invert Axis for RightToLeft (Arabic language) support
-					textLine.Draw(drawingContext, new Point(0, pos), InvertAxes.Horizontal);
+					textLine.Draw(drawingContext, new Point(textView.LeftBlankWidth, pos), InvertAxes.Horizontal); //shiwei
 				}
 				pos += textLine.Height;
 			}

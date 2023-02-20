@@ -55,6 +55,24 @@ namespace ICSharpCode.AvalonEdit.Rendering
 			FocusableProperty.OverrideMetadata(typeof(TextView), new FrameworkPropertyMetadata(Boxes.False));
 		}
 
+		private int _leftBlankWidth;
+		/// <summary>
+		/// Left Blank Space of TextView
+		/// </summary>
+		public int LeftBlankWidth {
+			set => _leftBlankWidth = Math.Max(0, value);
+			get => _leftBlankWidth;
+		}
+
+		private int rightBlankWidth;
+		/// <summary>
+		/// Right Blank Space of TextView
+		/// </summary>
+		public int RightBlankWidth {
+			set => rightBlankWidth = Math.Max(0, value);
+			get => rightBlankWidth;
+		}
+
 		ColumnRulerRenderer columnRulerRenderer;
 		CurrentLineHighlightRenderer currentLineHighlighRenderer;
 
@@ -1030,7 +1048,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 													"This can happen when Redraw() is called during measure for lines " +
 													"that are already constructed.");
 			}
-			return maxWidth;
+			return maxWidth + LeftBlankWidth + rightBlankWidth;
 		}
 		#endregion
 
