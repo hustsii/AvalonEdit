@@ -131,6 +131,63 @@ namespace ICSharpCode.AvalonEdit.Rendering
 			return GetRectsForSegmentImpl(textView, segment, extendToFullWidthAtLineEnd);
 		}
 
+
+		/// <summary>
+		/// Calculates the list of rectangle where the segment in shown or out off scroll.
+		/// This method usually returns one rectangle for each line inside the segment
+		/// (but potentially more, e.g. when bidirectional text is involved).
+		/// </summary>
+		public static IEnumerable<Rect> GetRectsForSegment2(TextView textView, ISegment segment, bool extendToFullWidthAtLineEnd = false)
+		{
+			if (textView == null)
+				throw new ArgumentNullException("textView");
+			if (segment == null)
+				throw new ArgumentNullException("segment");
+			int segmentStart = segment.Offset;
+			int segmentEnd = segment.Offset + segment.Length;
+
+			segmentStart = segmentStart.CoerceValue(0, textView.Document.TextLength);
+			segmentEnd = segmentEnd.CoerceValue(0, textView.Document.TextLength);
+
+			TextViewPosition start;
+			TextViewPosition end;
+
+			if (segment is SelectionSegment) {
+				SelectionSegment sel = (SelectionSegment)segment;
+				start = new TextViewPosition(textView.Document.GetLocation(sel.StartOffset), sel.StartVisualColumn);
+				end = new TextViewPosition(textView.Document.GetLocation(sel.EndOffset), sel.EndVisualColumn);
+			} else {
+				start = new TextViewPosition(textView.Document.GetLocation(segmentStart));
+				end = new TextViewPosition(textView.Document.GetLocation(segmentEnd));
+			}
+
+			foreach (var dline in textView.Document.Lines) {
+				VisualLine vl = textView.GetOrConstructVisualLine(dline);
+				int vlStartOffset = vl.FirstDocumentLine.Offset;
+				if (vlStartOffset > segmentEnd)
+					break;
+				int vlEndOffset = vl.LastDocumentLine.Offset + vl.LastDocumentLine.Length;
+				if (vlEndOffset < segmentStart)
+					continue;
+
+				int segmentStartVC;
+				if (segmentStart < vlStartOffset)
+					segmentStartVC = 0;
+				else
+					segmentStartVC = vl.ValidateVisualColumn(start, extendToFullWidthAtLineEnd);
+
+				int segmentEndVC;
+				if (segmentEnd > vlEndOffset)
+					segmentEndVC = extendToFullWidthAtLineEnd ? int.MaxValue : vl.VisualLengthWithEndOfLineMarker;
+				else
+					segmentEndVC = vl.ValidateVisualColumn(end, extendToFullWidthAtLineEnd);
+
+				foreach (var rect in ProcessTextLines(textView, vl, segmentStartVC, segmentEndVC))
+					yield return rect;
+			}
+		}
+
+
 		static IEnumerable<Rect> GetRectsForSegmentImpl(TextView textView, ISegment segment, bool extendToFullWidthAtLineEnd)
 		{
 			int segmentStart = segment.Offset;
