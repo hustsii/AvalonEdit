@@ -113,6 +113,23 @@ namespace ICSharpCode.AvalonEdit
 			}
 		}
 
+		bool showTabsWithoutBothEnds;
+
+		/// <summary>
+		/// Gets/Sets whether to show » for tabs.
+		/// </summary>
+		/// <remarks>The default value is <c>false</c>.</remarks>
+		[DefaultValue(false)]
+		public virtual bool ShowTabsWithoutBothEnds {
+			get { return showTabs; }
+			set {
+				if (showTabsWithoutBothEnds != value) {
+					showTabsWithoutBothEnds = value;
+					OnPropertyChanged("ShowTabsWithoutBothEnds");
+				}
+			}
+		}
+
 		bool showEndOfLine;
 
 		/// <summary>

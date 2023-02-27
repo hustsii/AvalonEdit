@@ -50,6 +50,11 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		public bool ShowTabs { get; set; }
 
 		/// <summary>
+		/// Gets/Sets whether to show » for tabs.
+		/// </summary>
+		public bool ShowTabsWithoutBothEnds { get; set; }
+
+		/// <summary>
 		/// Gets/Sets whether to show a box with the hex code for control characters.
 		/// </summary>
 		public bool ShowBoxForControlCharacters { get; set; }
@@ -61,6 +66,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		{
 			this.ShowSpaces = true;
 			this.ShowTabs = true;
+			this.ShowTabsWithoutBothEnds = false;
 			this.ShowBoxForControlCharacters = true;
 		}
 
@@ -68,6 +74,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 		{
 			this.ShowSpaces = options.ShowSpaces;
 			this.ShowTabs = options.ShowTabs;
+			this.ShowTabsWithoutBothEnds = options.ShowTabsWithoutBothEnds;
 			this.ShowBoxForControlCharacters = options.ShowBoxForControlCharacters;
 		}
 
@@ -84,8 +91,13 @@ namespace ICSharpCode.AvalonEdit.Rendering
 							return startOffset + i;
 						break;
 					case '\t':
-						if (ShowTabs)
+						if (ShowTabs) {
+							if (!ShowTabsWithoutBothEnds)
+								return startOffset + i;
+							else if (string.IsNullOrEmpty(relevantText.Text.Substring(0, startOffset + i - endLine.Offset).Trim(new char[] { '\r', '\n', '\t' })))
+								break;
 							return startOffset + i;
+						}
 						break;
 					default:
 						if (ShowBoxForControlCharacters && char.IsControl(c)) {
@@ -103,6 +115,12 @@ namespace ICSharpCode.AvalonEdit.Rendering
 			if (ShowSpaces && c == ' ') {
 				return new SpaceTextElement(CurrentContext.TextView.cachedElements.GetTextForNonPrintableCharacter("\u00B7", CurrentContext));
 			} else if (ShowTabs && c == '\t') {
+				if (ShowTabsWithoutBothEnds) {
+					DocumentLine endLine = CurrentContext.VisualLine.LastDocumentLine;
+					StringSegment restText = CurrentContext.GetText(offset, endLine.EndOffset - offset);
+					if (string.IsNullOrEmpty(restText.Text.Substring(offset - endLine.Offset, endLine.EndOffset - offset).Trim(new char[] { '\r', '\n', '\t' })))
+						return null;
+				}
 				return new TabTextElement(CurrentContext.TextView.cachedElements.GetTextForNonPrintableCharacter("\u00BB", CurrentContext));
 			} else if (ShowBoxForControlCharacters && char.IsControl(c)) {
 				var p = new VisualLineElementTextRunProperties(CurrentContext.GlobalTextRunProperties);
