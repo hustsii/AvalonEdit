@@ -1123,7 +1123,7 @@ namespace ICSharpCode.AvalonEdit.Rendering
 				TextLine textLine = formatter.FormatLine(
 					textSource,
 					textOffset,
-					availableSize.Width,
+					availableSize.Width - LeftBlankWidth - RightBlankWidth,
 					paragraphProperties,
 					lastLineBreak
 				);
